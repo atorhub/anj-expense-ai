@@ -1,2 +1,3 @@
+Add example AI parser script with placeholder key for public repo
 
-const API_KEY = "YOUR_GORQ_API_KEY_HERE";
+
