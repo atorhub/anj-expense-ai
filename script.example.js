@@ -1,0 +1,2 @@
+
+const API_KEY = "YOUR_GORQ_API_KEY_HERE";
