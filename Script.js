@@ -12,7 +12,8 @@ async function analyzeSMS(text) {
     console.log(result);
 
     const dashboard = document.querySelector("#dashboard");
-    dashboard.innerHTML = JSON.stringify(result);
+    dashboard.innerHTML += `<div>${JSON.stringify(result)}</div><hr>`;
+
 }
 
 async function analyzeBulk() {
