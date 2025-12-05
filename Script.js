@@ -4,7 +4,7 @@ async function analyzeSMS(text) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "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"
+        "Authorization": "Bearer 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"
       },
       body: JSON.stringify({
         model: "llama-3.1-70b-versatile",
@@ -22,15 +22,13 @@ async function analyzeSMS(text) {
     }
 
     const result = await response.json();
-    console.log("AI raw result:", result);
+    console.log("AI result:", result);
 
     const content = result.choices?.[0]?.message?.content?.trim();
-    const dashboard = document.querySelector("#dashboard");
-    dashboard.innerHTML += `<div>📩 ${text}<br>🧠 ${content}</div><hr>`;
+    document.querySelector("#dashboard").innerHTML += `<div>📩 ${text}<br>🧠 ${content}</div><hr>`;
   } catch (err) {
     console.error("AI error:", err);
-    const dashboard = document.querySelector("#dashboard");
-    dashboard.innerHTML += `<div>❌ Error analyzing "${text}": ${err.message}</div><hr>`;
+    document.querySelector("#dashboard").innerHTML += `<div>❌ Error: ${err.message}</div><hr>`;
   }
 }
 
