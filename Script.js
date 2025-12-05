@@ -4,7 +4,7 @@ async function analyzeSMS(text) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"
+        "Authorization": "Bearer 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"
       },
       body: JSON.stringify({
         model: "llama-3.1-70b-versatile",
@@ -35,4 +35,3 @@ async function analyzeSMS(text) {
     document.querySelector("#dashboard").innerHTML += `<div>❌ JS error: ${err.message}</div><hr>`;
   }
 }
-
