@@ -10,25 +10,29 @@ async function analyzeSMS(text) {
         model: "llama-3.1-70b-versatile",
         messages: [
           { role: "system", content: "You are a financial SMS parser. Return JSON only." },
-          { role: "user", content: text }
+          { role: "user", content: `Parse this: "${text}". Return JSON with amount, type, category, description.` }
         ],
         temperature: 0
       })
     });
 
+    const dashboard = document.querySelector("#dashboard");
+
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errText}`);
+      dashboard.innerHTML += `<div>❌ HTTP ${response.status}: ${errText}</div><hr>`;
+      console.error("HTTP error:", response.status, errText);
+      return;
     }
 
     const result = await response.json();
     console.log("AI result:", result);
 
     const content = result.choices?.[0]?.message?.content?.trim();
-    document.querySelector("#dashboard").innerHTML += `<div>📩 ${text}<br>🧠 ${content}</div><hr>`;
+    dashboard.innerHTML += `<div>📩 ${text}<br>🧠 ${content}</div><hr>`;
   } catch (err) {
     console.error("AI error:", err);
-    document.querySelector("#dashboard").innerHTML += `<div>❌ Error: ${err.message}</div><hr>`;
+    document.querySelector("#dashboard").innerHTML += `<div>❌ JS error: ${err.message}</div><hr>`;
   }
 }
 
