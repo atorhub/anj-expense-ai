@@ -3,89 +3,155 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ANJ Expense AI</title>
+  <title>ANJ Expense AI - V1 Parser</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+  <!-- JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- Tesseract OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.2/dist/tesseract.min.js"></script>
+
   <style>
     body {
       font-family: system-ui, sans-serif;
-      margin: 0;
       background: #f5f5f5;
-      color: #111;
+      margin: 0;
+      padding: 0;
+      color: #222;
     }
     header {
       background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
-      padding: 1rem;
+      color: white;
       text-align: center;
+      padding: 1.2rem;
     }
-    main { padding: 1rem; max-width: 800px; margin: auto; }
+    main { max-width: 900px; margin: auto; padding: 1rem; }
+
     .card {
-      background: #fff;
-      border-radius: 8px;
+      background: white;
       padding: 1rem;
       margin-bottom: 1rem;
+      border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    textarea {
-      width: 100%;
-      min-height: 120px;
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 0.95rem;
-    }
-    .actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
     button {
-      padding: 0.6rem 1rem;
+      padding: 0.7rem 1.2rem;
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
+      border-radius: 8px;
       background: #2c5364;
-      color: #fff;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 1rem;
     }
-    button.secondary { background: #e5e7eb; color: #111; }
-    button.danger { background: #dc2626; }
-    #dashboard { margin-top: 1rem; white-space: pre-wrap; }
+    #output { white-space: pre-wrap; margin-top: 1rem; background: #eee; padding: 1rem; border-radius: 8px; }
   </style>
 </head>
+
 <body>
   <header>
-    <h1>ANJ Expense AI</h1>
-    <p>Privacy-first • Offline-ready • Powered by Groq</p>
+    <h1>ANJ Expense AI – V1 Parser</h1>
+    <p>ZIP • PDF • Image Parser (No AI — Offline Ready)</p>
   </header>
 
   <main>
+    <!-- Upload Section -->
     <section class="card">
-      <label for="smsInput">Paste your SMS/UPI logs (one per line):</label>
-      <textarea id="smsInput" placeholder="₹500 debited at Big Bazaar
-₹2000 credited from employer"></textarea>
-      <div class="actions">
-        <!-- ✅ Correct function call -->
-        <button onclick="analyzeBulk()">Analyze with AI</button>
-        <button class="secondary" onclick="saveDB()">Save offline</button>
-        <button class="secondary" onclick="loadDB()">Load offline</button>
-        <button class="danger" onclick="clearDB()">Clear data</button>
-      </div>
-      <div id="status" style="margin-top:0.5rem; color:#666;"></div>
+      <h2>Upload your ZIP / PDF / Image</h2>
+      <input type="file" id="fileInput" multiple />
+
+      <button onclick="handleFiles()">Parse Files</button>
+      <p id="status"></p>
     </section>
 
+    <!-- Parsed Output -->
     <section class="card">
-      <h3>Recent transactions</h3>
-      <div id="recent">No transactions yet.</div>
-    </section>
-
-    <section class="card">
-      <h3>Raw AI output</h3>
-      <div id="dashboard">Results will appear here…</div>
+      <h2>Extracted Text</h2>
+      <div id="output">Nothing parsed yet…</div>
     </section>
   </main>
 
-  <footer style="text-align:center; padding:1rem; color:#666;">
-    🚀 Privacy-first • Offline-ready • Built by Niaz
-  </footer>
+  <script>
+    async function handleFiles() {
+      const files = document.getElementById("fileInput").files;
+      if (!files.length) {
+        alert("Please upload files");
+        return;
+      }
 
-  <!-- ✅ SQLite + script -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
-  <script src="script.js"></script>
+      document.getElementById("status").innerText = "Parsing… please wait";
+
+      let finalOutput = "";
+
+      for (let file of files) {
+        const name = file.name.toLowerCase();
+
+        if (name.endsWith(".zip")) {
+          finalOutput += await parseZip(file);
+        } 
+        else if (name.endsWith(".pdf")) {
+          finalOutput += await parsePDF(file);
+        }
+        else if (name.endsWith(".jpg") || name.endsWith(".png")) {
+          finalOutput += await parseImage(file);
+        }
+        else {
+          finalOutput += `\n❌ Unsupported: ${file.name}\n`;
+        }
+      }
+
+      document.getElementById("output").innerText = finalOutput;
+      localStorage.setItem("anj_expense_text", finalOutput);
+
+      document.getElementById("status").innerText = "✔ Done";
+    }
+
+    // ---------------- ZIP PARSER ----------------
+    async function parseZip(file) {
+      const zip = await JSZip.loadAsync(file);
+      let text = `\n📦 ZIP: ${file.name}\n`;
+
+      for (const filename of Object.keys(zip.files)) {
+        const entry = zip.files[filename];
+
+        if (filename.endsWith(".txt")) {
+          const content = await entry.async("string");
+          text += `\n📄 ${filename}\n${content}\n`;
+        }
+      }
+      return text;
+    }
+
+    // ---------------- PDF PARSER ----------------
+    async function parsePDF(file) {
+      let arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+      let text = `\n📘 PDF: ${file.name}\n`;
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(i => i.str).join(" ");
+        text += `\n--- Page ${i} ---\n${pageText}\n`;
+      }
+
+      return text;
+    }
+
+    // ---------------- IMAGE PARSER (OCR) ----------------
+    async function parseImage(file) {
+      const { data: { text }} = await Tesseract.recognize(file, "eng");
+      return `\n🖼️ IMAGE: ${file.name}\n${text}\n`;
+    }
+  </script>
+
 </body>
 </html>
